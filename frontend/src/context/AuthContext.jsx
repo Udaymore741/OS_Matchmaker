@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { mockUser, mockUserProfile } from '../data/mockData';
 
 const AuthContext = createContext({
   user: null,
@@ -18,49 +17,70 @@ const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session in localStorage (mock auth persistence)
+    // Check for existing session in localStorage and cookies
     const checkAuth = async () => {
-      const savedAuth = localStorage.getItem('auth');
-      if (savedAuth) {
-        setUser(mockUser);
-        setUserProfile(mockUserProfile);
-        setIsAuthenticated(true);
+      try {
+        const response = await fetch("http://localhost:8080/api/auth/getData", {
+          credentials: "include"
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          setUser(data.user);
+          setUserProfile(data.user);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     checkAuth();
   }, []);
 
-  const login = async () => {
+  const login = async (data) => {
+    if (!data) return;
+    
+    if (data.isLoading !== undefined) {
+      setIsLoading(data.isLoading);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Set auth state before storing in localStorage
-      setUser(mockUser);
-      setUserProfile(mockUserProfile);
-      setIsAuthenticated(true);
-      
-      // Store auth state in localStorage
-      localStorage.setItem('auth', 'true');
+      if (data.user) {
+        setUser(data.user);
+        setUserProfile(data.user);
+        setIsAuthenticated(true);
+      }
     } catch (error) {
       console.error('Login failed:', error);
       setIsAuthenticated(false);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setIsLoading(true);
-    // Clear auth state
-    setUser(null);
-    setUserProfile(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('auth');
-    setIsLoading(false);
+    try {
+      // Call logout endpoint to clear cookies
+      await fetch("http://localhost:8080/api/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      // Clear auth state
+      setUser(null);
+      setUserProfile(null);
+      setIsAuthenticated(false);
+      setIsLoading(false);
+    }
   };
 
   return (
