@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Github, LogOut } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
@@ -22,6 +23,10 @@ const Navbar = () => {
     { name: 'Saved', path: '/saved' },
     { name: 'Profile', path: '/profile' },
   ];
+
+  const handleSignUp = () => {
+    navigate('/login');
+  };
 
   return (
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
@@ -37,7 +42,7 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* Desktop navigation */}
+            {/* Desktop navigation - Only show when authenticated */}
             {isAuthenticated && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navLinks.map((link) => (
@@ -58,9 +63,9 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <ThemeToggle />
+            {isAuthenticated && <ThemeToggle />}
 
-            {isAuthenticated && user && (
+            {isAuthenticated ? (
               <>
                 <div className="hidden md:flex items-center gap-3">
                   <img
@@ -80,24 +85,34 @@ const Navbar = () => {
                     Sign out
                   </Button>
                 </div>
-              </>
-            )}
 
-            {/* Mobile menu button */}
-            <div className="flex items-center sm:hidden">
-              <button
-                onClick={toggleMenu}
-                className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                {/* Mobile menu button */}
+                <div className="flex items-center sm:hidden">
+                  <button
+                    onClick={toggleMenu}
+                    className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                  >
+                    <span className="sr-only">Open main menu</span>
+                    {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSignUp}
+                leftIcon={<Github size={16} />}
+                className="font-medium"
               >
-                <span className="sr-only">Open main menu</span>
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-            </div>
+                Sign up with GitHub
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu - Only show when authenticated */}
       {isMenuOpen && isAuthenticated && (
         <div className="sm:hidden">
           <div className="pt-2 pb-3 space-y-1">
