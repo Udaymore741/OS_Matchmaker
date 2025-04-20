@@ -10,6 +10,7 @@ import SavedIssuesPage from './pages/SavedIssuesPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
+import IssueDetail from './components/issues/IssueDetail';
 import PropTypes from 'prop-types';
 
 function App() {
@@ -95,15 +96,21 @@ function App() {
                   </AuthGuard>
                 }
               />
+
+              <Route
+                path="/issue/:number"
+                element={
+                  <AuthGuard>
+                    <IssueDetail />
+                  </AuthGuard>
+                }
+              />
               
               {/* Catch-all route - redirect to appropriate page based on auth status */}
               <Route 
                 path="*" 
                 element={
-                  <Navigate 
-                    to={localStorage.getItem('auth') ? '/dashboard' : '/'} 
-                    replace 
-                  />
+                  <Navigate to="/" replace />
                 } 
               />
             </Routes>

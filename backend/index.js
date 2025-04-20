@@ -4,6 +4,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import dotenv from 'dotenv'
 import AuthRouter from './routes/auth.route.js'
+import GithubRouter from './routes/github.route.js'
 
 dotenv.config()
 
@@ -17,12 +18,13 @@ app.use(cors({
 app.use(cookieParser())
 
 app.use('/api/auth', AuthRouter)
+app.use('/api/github', GithubRouter)
 
 mongoose.connect(process.env.MONGODB_CONN)
     .then(() => console.log('Database connected'))
     .catch(err => console.log('Database connection failed', err))
 
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 8080
 app.listen(PORT, () => {
-    console.log('Server running on port:', PORT)
+    console.log(`Server running on port: ${PORT}`)
 })

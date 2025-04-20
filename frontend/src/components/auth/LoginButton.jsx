@@ -15,8 +15,9 @@ const LoginButton = ({ className = "" }) => {
   const handleLogin = async () => {
     try {
       // Set loading state
-      await login({ isLoading: true });
+      login({ isLoading: true });
 
+      // Sign in with GitHub
       const loginResponse = await signInWithPopup(auth, provider);
       const user = loginResponse.user;
 
@@ -32,6 +33,7 @@ const LoginButton = ({ className = "" }) => {
       });
       const githubData = await githubResponse.json();
 
+      // Prepare user data for backend
       const userData = {
         name: githubData.name || user.displayName,
         email: user.email,
@@ -53,30 +55,12 @@ const LoginButton = ({ className = "" }) => {
         type: githubData.type,
       };
 
-      // Send user data to backend
-      const response = await fetch("http://localhost:8080/api/auth/login", {
-        method: "post",
-        credentials: "include",
-        headers: { "Content-type": "application/json" },
-        body: JSON.stringify(userData),
-      });
+      // Send user data to backend through AuthContext
+      await login(userData);
 
-      const responseData = await response.json();
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Login failed');
-      }
-
-      // Update auth context with user data
-      await login({
-        user: userData,
-        isAuthenticated: true
-      });
-
-      // Navigate after successful login
-      navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      await login({ isLoading: false });
+      login({ isLoading: false });
       alert(error.message || "Failed to login. Please try again.");
     }
   };

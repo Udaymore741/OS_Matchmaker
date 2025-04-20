@@ -6,7 +6,7 @@ import Button from '../ui/Button';
 import { 
   Clock, MessageSquare, GitBranch, Star, Eye, 
   Award, BookmarkPlus, PlayCircle, CheckCircle, 
-  ExternalLink, FileCode, Calendar
+  ExternalLink, FileCode, Calendar, Lightbulb
 } from 'lucide-react';
 import { useIssues } from '../../context/IssueContext';
 import { formatDate } from '../../utils/dateUtils';
@@ -46,7 +46,7 @@ const IssueDetail = ({ issue, onClose }) => {
   };
   
   const visitRepository = () => {
-    window.open(issue.repository.url, '_blank');
+    window.open(issue.url, '_blank');
   };
   
   return (
@@ -56,12 +56,12 @@ const IssueDetail = ({ issue, onClose }) => {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <img 
-                src={issue.repository.ownerAvatarUrl} 
-                alt={issue.repository.name}
+                src={issue.author?.avatarUrl || 'https://github.com/identicons/default.png'} 
+                alt={issue.author?.login || 'Author'}
                 className="w-6 h-6 rounded-full"
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {issue.repository.fullName}
+                {issue.author?.login || 'Unknown'}
               </span>
               <span className="text-gray-500 dark:text-gray-400 text-sm">
                 #{issue.number}
@@ -73,78 +73,73 @@ const IssueDetail = ({ issue, onClose }) => {
             </h2>
             
             <div className="flex flex-wrap gap-1.5 mb-3">
-              {issue.labels.map(label => (
+              {issue.labels?.nodes?.map((label, index) => (
                 <span 
-                  key={label.id}
+                  key={index}
                   className="px-2 py-0.5 text-xs rounded-full"
                   style={{ 
-                    backgroundColor: `#${label.color}20`, 
-                    color: `#${label.color}`,
-                    border: `1px solid #${label.color}40`
+                    backgroundColor: `#${label?.color || 'a2eeef'}20`, 
+                    color: `#${label?.color || 'a2eeef'}`,
+                    border: `1px solid #${label?.color || 'a2eeef'}40`
                   }}
-                  title={label.description}
                 >
-                  {label.name}
+                  {typeof label === 'object' ? label.name : label}
                 </span>
               ))}
             </div>
           </div>
           
           <Badge
-            variant={getMatchScoreColor(issue.matchScore)}
+            variant={getMatchScoreColor(issue.matchScore || 0)}
             size="lg"
           >
-            {issue.matchScore}% match
+            {issue.matchScore || 0}% match
           </Badge>
         </div>
       </CardHeader>
       
       <CardBody>
         <div className="prose dark:prose-invert max-w-none">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
+            <div className="flex items-start gap-3">
+              <Lightbulb className="w-5 h-5 text-blue-500 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  Why This Issue is Recommended
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300">
+                  This issue has been selected based on your skills and interests. It's a great opportunity to:
+                </p>
+                <ul className="list-disc list-inside mt-2 text-gray-700 dark:text-gray-300">
+                  <li>Contribute to an open-source project</li>
+                  <li>Gain experience with {issue.labels?.nodes?.[0]?.name || 'relevant technologies'}</li>
+                  <li>Work on a {issue.difficulty || 'beginner'}-level task</li>
+                  <li>Collaborate with the open-source community</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <p className="text-gray-700 dark:text-gray-300 mb-6">
-            {issue.description}
+            {issue.bodyText}
           </p>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-              <FileCode size={16} />
-              <span>{issue.language}</span>
-            </div>
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <Calendar size={16} />
               <span>Created {formatDate(issue.createdAt)}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <MessageSquare size={16} />
-              <span>{issue.comments} comments</span>
+              <span>{issue.comments?.totalCount || 0} comments</span>
             </div>
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-              <Eye size={16} />
-              <span>{issue.views} views</span>
+              <Clock size={16} />
+              <span>{issue.state || 'open'}</span>
             </div>
-          </div>
-          
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-              Repository Stats
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <Star size={16} />
-                <span>{issue.repository.stars} stars</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <GitBranch size={16} />
-                <span>{issue.repository.forks} forks</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <Eye size={16} />
-                <span>{issue.repository.watchers} watchers</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <Award size={16} />
-                <span>{issue.repository.score} score</span>
-              </div>
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+              <Award size={16} />
+              <span>{issue.difficulty || 'unknown'}</span>
             </div>
           </div>
           
@@ -170,7 +165,7 @@ const IssueDetail = ({ issue, onClose }) => {
               onClick={visitRepository}
               rightIcon={<ExternalLink size={16} />}
             >
-              Visit Repository
+              Visit Issue
             </Button>
           </div>
           
@@ -226,40 +221,34 @@ const IssueDetail = ({ issue, onClose }) => {
 
 IssueDetail.propTypes = {
   issue: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    number: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired,
-    priority: PropTypes.string.isRequired,
-    difficulty: PropTypes.oneOf(['beginner', 'intermediate', 'advanced']).isRequired,
-    matchScore: PropTypes.number.isRequired,
-    comments: PropTypes.number.isRequired,
-    views: PropTypes.number.isRequired,
-    language: PropTypes.string.isRequired,
+    bodyText: PropTypes.string,
     createdAt: PropTypes.string.isRequired,
-    labels: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        name: PropTypes.string.isRequired,
-        color: PropTypes.string.isRequired,
-        description: PropTypes.string,
-      })
-    ).isRequired,
-    repository: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      fullName: PropTypes.string.isRequired,
-      ownerAvatarUrl: PropTypes.string.isRequired,
-      url: PropTypes.string.isRequired,
-      stars: PropTypes.number.isRequired,
-      forks: PropTypes.number.isRequired,
-      watchers: PropTypes.number.isRequired,
-      score: PropTypes.number.isRequired,
-    }).isRequired,
-    savedState: PropTypes.oneOf(['NONE', 'INTERESTED', 'IN_PROGRESS', 'COMPLETED']),
-    notes: PropTypes.string,
+    number: PropTypes.number.isRequired,
+    state: PropTypes.string,
+    difficulty: PropTypes.oneOf(['beginner', 'intermediate', 'advanced']),
+    matchScore: PropTypes.number,
+    url: PropTypes.string,
+    comments: PropTypes.shape({
+      totalCount: PropTypes.number
+    }),
+    author: PropTypes.shape({
+      login: PropTypes.string,
+      avatarUrl: PropTypes.string
+    }),
+    labels: PropTypes.shape({
+      nodes: PropTypes.arrayOf(
+        PropTypes.oneOfType([
+          PropTypes.string,
+          PropTypes.shape({
+            name: PropTypes.string,
+            color: PropTypes.string
+          })
+        ])
+      )
+    })
   }).isRequired,
-  onClose: PropTypes.func,
+  onClose: PropTypes.func
 };
 
 export default IssueDetail; 

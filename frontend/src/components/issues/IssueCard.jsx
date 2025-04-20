@@ -6,7 +6,6 @@ import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from '../../utils/dateUtils';
-import { useIssues } from '../../context/IssueContext';
 
 const difficultyColors = {
   beginner: 'success',
@@ -23,20 +22,23 @@ const getMatchScoreColor = (score) => {
 
 const IssueCard = ({ issue, onSelect, savedState }) => {
   const navigate = useNavigate();
-  const { saveIssue } = useIssues();
 
   const handleClick = () => {
     if (onSelect) {
       onSelect(issue);
     } else {
-      navigate(`/issues/${issue.id}`);
+      // Ensure we have a valid issue number before navigating
+      if (issue?.number) {
+        navigate(`/issue/${issue.number}`, { state: { issue } });
+      } else {
+        console.error('Invalid issue number:', issue);
+      }
     }
   };
 
   const handleSave = (e) => {
     e.stopPropagation();
-    // saveIssue(issue, 'INTERESTED');
-    // 
+    // Save functionality can be implemented later
   };
 
   const getStatusBadge = () => {
@@ -69,7 +71,7 @@ const IssueCard = ({ issue, onSelect, savedState }) => {
   return (
     <Card 
       hover 
-      className="relative transition-all duration-200 h-full flex flex-col"
+      className="relative transition-all duration-200 h-full flex flex-col cursor-pointer"
       onClick={handleClick}
     >
       {getStatusBadge()}
@@ -77,12 +79,12 @@ const IssueCard = ({ issue, onSelect, savedState }) => {
       <CardBody className="flex-1">
         <div className="mb-2 flex items-center gap-2">
           <img 
-            src={issue.repository.ownerAvatarUrl} 
-            alt={issue.repository.name}
+            src={issue.author?.avatarUrl || 'https://github.com/identicons/default.png'} 
+            alt={issue.author?.login || 'Author'}
             className="w-5 h-5 rounded-full"
           />
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {issue.repository.fullName}
+            {issue.author?.login || 'Unknown'}
           </span>
         </div>
         
@@ -91,21 +93,21 @@ const IssueCard = ({ issue, onSelect, savedState }) => {
         </h3>
 
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-          {issue.body}
+          {issue.bodyText}
         </p>
         
         <div className="flex flex-wrap gap-1.5 mb-3">
-          {issue.labels.map(label => (
+          {issue.labels?.nodes?.map((label, index) => (
             <span 
-              key={label.id}
+              key={index}
               className="px-2 py-0.5 text-xs rounded-full"
               style={{ 
-                backgroundColor: `#${label.color}20`, 
-                color: `#${label.color}`,
-                border: `1px solid #${label.color}40`
+                backgroundColor: `#${label?.color || 'a2eeef'}20`, 
+                color: `#${label?.color || 'a2eeef'}`,
+                border: `1px solid #${label?.color || 'a2eeef'}40`
               }}
             >
-              {label.name}
+              {typeof label === 'object' ? label.name : label}
             </span>
           ))}
         </div>
@@ -115,18 +117,22 @@ const IssueCard = ({ issue, onSelect, savedState }) => {
             <Clock size={14} />
             <span>{formatDistanceToNow(new Date(issue.createdAt))}</span>
           </div>
+          <div className="flex items-center gap-1">
+            <MessageSquare size={14} />
+            <span>{issue.comments?.totalCount || 0} comments</span>
+          </div>
         </div>
       </CardBody>
       
       <CardFooter className="pt-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between w-full">
-          <Badge variant={difficultyColors[issue.difficulty]}>
-            {issue.difficulty}
+          <Badge variant={difficultyColors[issue.difficulty] || 'primary'}>
+            {issue.difficulty || issue.state || 'open'}
           </Badge>
           <div className="flex items-center gap-2">
             <Award size={16} className="text-yellow-500" />
             <span className="text-sm font-medium">
-              {issue.matchScore}% match
+              {issue.matchScore || 0}% match
             </span>
             {!savedState && (
               <Button
@@ -147,29 +153,34 @@ const IssueCard = ({ issue, onSelect, savedState }) => {
 
 IssueCard.propTypes = {
   issue: PropTypes.shape({
-    id: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
-    body: PropTypes.string.isRequired,
-    state: PropTypes.string.isRequired,
-    difficulty: PropTypes.oneOf(['beginner', 'intermediate', 'advanced']).isRequired,
-    matchScore: PropTypes.number.isRequired,
-    comments: PropTypes.number.isRequired,
+    bodyText: PropTypes.string,
     createdAt: PropTypes.string.isRequired,
-    labels: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        name: PropTypes.string.isRequired,
-        color: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-    repository: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      fullName: PropTypes.string.isRequired,
-      ownerAvatarUrl: PropTypes.string.isRequired,
-    }).isRequired,
+    number: PropTypes.number.isRequired,
+    state: PropTypes.string,
+    difficulty: PropTypes.oneOf(['beginner', 'intermediate', 'advanced']),
+    matchScore: PropTypes.number,
+    comments: PropTypes.shape({
+      totalCount: PropTypes.number
+    }),
+    author: PropTypes.shape({
+      login: PropTypes.string,
+      avatarUrl: PropTypes.string
+    }),
+    labels: PropTypes.shape({
+      nodes: PropTypes.arrayOf(
+        PropTypes.oneOfType([
+          PropTypes.string,
+          PropTypes.shape({
+            name: PropTypes.string,
+            color: PropTypes.string
+          })
+        ])
+      )
+    })
   }).isRequired,
   onSelect: PropTypes.func,
-  savedState: PropTypes.oneOf(['INTERESTESTED', 'IN_PROGRESS', 'COMPLETED']),
+  savedState: PropTypes.oneOf(['INTERESTESTED', 'IN_PROGRESS', 'COMPLETED'])
 };
 
 export default IssueCard; 
