@@ -24,6 +24,12 @@ const SkillRadarChart = ({
     usage: skill.recentUsage * 10, // Scale to 0-100
     fullMark: 100
   }));
+
+  // Add months data
+  const months = [
+    'May 2024', 'June 2024', 'July 2024', 'August 2024', 'September 2024', 'October 2024',
+    'November 2024', 'December 2024', 'January 2025', 'February 2025', 'March 2025', 'April 2025'
+  ];
   
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -58,8 +64,18 @@ const SkillRadarChart = ({
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
               <PolarGrid stroke="#E5E7EB" />
-              <PolarAngleAxis dataKey="skill" tick={{ fill: '#6B7280', fontSize: 12 }} />
-              <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} tick={false} axisLine={false} />
+              <PolarAngleAxis 
+                dataKey="skill" 
+                tick={{ fill: '#6B7280', fontSize: 12 }} 
+                tickCount={12}
+              />
+              <PolarRadiusAxis 
+                angle={30} 
+                domain={[0, 100]} 
+                tickCount={5} 
+                tick={false} 
+                axisLine={false} 
+              />
               <Radar 
                 name="Skill Level" 
                 dataKey="level" 

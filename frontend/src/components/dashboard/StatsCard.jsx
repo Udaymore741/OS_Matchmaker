@@ -27,10 +27,8 @@ const StatsCard = ({
                       : 'text-red-600 dark:text-red-400'
                   }`}
                 >
-                  {change.isPositive ? '+' : ''}{change.value}%
                 </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">vs last month</span>
-              </div>
+                </div>
             )}
             
             {description && (

@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Clock, MessageSquare, Award } from 'lucide-react';
+import { Clock, MessageSquare, Award, BookmarkPlus } from 'lucide-react';
 import { Card, CardBody, CardFooter } from '../ui/Card';
 import Badge from '../ui/Badge';
+import Button from '../ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from '../../utils/dateUtils';
 import { useIssues } from '../../context/IssueContext';
@@ -30,6 +31,12 @@ const IssueCard = ({ issue, onSelect, savedState }) => {
     } else {
       navigate(`/issues/${issue.id}`);
     }
+  };
+
+  const handleSave = (e) => {
+    e.stopPropagation();
+    // saveIssue(issue, 'INTERESTED');
+    // 
   };
 
   const getStatusBadge = () => {
@@ -108,10 +115,6 @@ const IssueCard = ({ issue, onSelect, savedState }) => {
             <Clock size={14} />
             <span>{formatDistanceToNow(new Date(issue.createdAt))}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <MessageSquare size={14} />
-            <span>{issue.comments}</span>
-          </div>
         </div>
       </CardBody>
       
@@ -125,6 +128,16 @@ const IssueCard = ({ issue, onSelect, savedState }) => {
             <span className="text-sm font-medium">
               {issue.matchScore}% match
             </span>
+            {!savedState && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSave}
+                leftIcon={<BookmarkPlus size={16} />}
+              >
+                Save
+              </Button>
+            )}
           </div>
         </div>
       </CardFooter>

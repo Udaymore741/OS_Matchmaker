@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext({
   user: null,
@@ -15,6 +16,7 @@ const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check for existing session in localStorage and cookies
@@ -68,17 +70,30 @@ const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       // Call logout endpoint to clear cookies
-      await fetch("http://localhost:8080/api/auth/logout", {
+      const response = await fetch("http://localhost:8080/api/auth/logout", {
         method: "POST",
         credentials: "include"
       });
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
+
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+
       // Clear auth state
       setUser(null);
       setUserProfile(null);
       setIsAuthenticated(false);
+
+      // Navigate to landing page
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still clear the auth state even if the server request fails
+      setUser(null);
+      setUserProfile(null);
+      setIsAuthenticated(false);
+      navigate('/');
+    } finally {
       setIsLoading(false);
     }
   };

@@ -8,7 +8,6 @@ import IssueRecommendations from '../components/dashboard/IssueRecommendations';
 import ContributionChart from '../components/dashboard/ContributionChart';
 import SkillRadarChart from '../components/dashboard/SkillRadarChart';
 import LanguageDonutChart from '../components/dashboard/LanguageDonutChart';
-import { mockContributions } from '../data/mockData';
 import { Code, Award, Clock, GitPullRequest } from 'lucide-react';
 
 const DashboardPage = () => {
@@ -30,12 +29,28 @@ const DashboardPage = () => {
   );
   
   // Calculate stats
-  const totalContributions = userProfile?.totalContributions || 0;
+  const [totalContributions, setTotalContributions] = React.useState(0);
+  
+  useEffect(() => {
+    const fetchReceivedEvents = async () => {
+      try {
+        const username = userProfile?.login;
+        if (!username) return;
+        
+        const response = await fetch(`https://api.github.com/users/${username}/received_events`);
+        const data = await response.json();
+        setTotalContributions(data.length);
+      } catch (error) {
+        console.error('Error fetching received events:', error);
+        setTotalContributions(0);
+      }
+    };
+    
+    fetchReceivedEvents();
+  }, [userProfile?.login]);
+  
   const currentStreak = userProfile?.contributionStreak || 0;
   const completedIssues = savedIssues.filter(issue => issue.savedState === 'completed').length;
-  
-  // Get recent contributions for the chart
-  const recentContributions = mockContributions.slice(-14);
   
   return (
     <Layout>
@@ -45,7 +60,7 @@ const DashboardPage = () => {
         </h1>
         
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-auto sm:grid-cols-auto lg:grid-cols-2 gap-6 mb-8">
           <StatsCard
             title="Total Contributions"
             value={totalContributions}
@@ -58,25 +73,11 @@ const DashboardPage = () => {
             icon={<Award size={24} />}
             change={{ value: 5, isPositive: true }}
           />
-          <StatsCard
-            title="Completed Issues"
-            value={completedIssues}
-            icon={<GitPullRequest size={24} />}
-            change={{ value: 15, isPositive: true }}
-          />
-          <StatsCard
-            title="In Progress"
-            value={inProgressIssues.length}
-            icon={<Clock size={24} />}
-          />
         </div>
         
         {/* Top row charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <ContributionChart 
-            data={recentContributions} 
-            title="Recent Contributions"
-          />
+          <ContributionChart title="Monthly Contributions" />
           
           <SkillRadarChart 
             skills={userProfile?.skills || []} 
@@ -103,11 +104,29 @@ const DashboardPage = () => {
         {/* In progress issues */}
         {inProgressIssues.length > 0 && (
           <div className="mb-8">
-            <IssueRecommendations 
-              issues={inProgressIssues} 
-              title="In Progress Issues"
-              showViewAll={false}
-            />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              In Progress Issues
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {inProgressIssues.map(issue => (
+                <div key={issue.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    {issue.title}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    {issue.description}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {issue.repository?.name || 'Unknown Repository'}
+                    </span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {issue.language}
+                    </span>
+                  </div>  
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

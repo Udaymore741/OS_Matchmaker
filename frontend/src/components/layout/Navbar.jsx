@@ -16,9 +16,10 @@ const Navbar = () => {
   const closeMenu = () => setIsMenuOpen(false);
 
   const isActive = (path) => location.pathname === path;
+  const isLandingPage = location.pathname === '/';
 
   const navLinks = [
-    { name: 'Dashboard', path: '/' },
+    { name: 'Dashboard', path: '/dashboard' },
     { name: 'Issues', path: '/issues' },
     { name: 'Saved', path: '/saved' },
     { name: 'Profile', path: '/profile' },
@@ -63,14 +64,14 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {isAuthenticated && <ThemeToggle />}
+            {isAuthenticated && !isLandingPage && <ThemeToggle />}
 
             {isAuthenticated ? (
               <>
                 <div className="hidden md:flex items-center gap-3">
                   <img
                     className="h-8 w-8 rounded-full border border-gray-200 dark:border-gray-700"
-                    src={user.avatarUrl}
+                    src={user.avatar_url}
                     alt={user.name}
                   />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -137,7 +138,7 @@ const Navbar = () => {
                 <div className="flex-shrink-0">
                   <img
                     className="h-10 w-10 rounded-full border border-gray-200 dark:border-gray-700"
-                    src={user.avatarUrl}
+                    src={user.avatar_url}
                     alt={user.name}
                   />
                 </div>

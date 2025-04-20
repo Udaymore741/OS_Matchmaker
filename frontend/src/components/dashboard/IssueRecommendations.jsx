@@ -79,7 +79,6 @@ IssueRecommendations.propTypes = {
       state: PropTypes.string.isRequired,
       difficulty: PropTypes.oneOf(['beginner', 'intermediate', 'advanced']).isRequired,
       matchScore: PropTypes.number.isRequired,
-      comments: PropTypes.number.isRequired,
       createdAt: PropTypes.string.isRequired,
       estimatedTime: PropTypes.string.isRequired,
       labels: PropTypes.arrayOf(
